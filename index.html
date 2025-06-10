@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المهندس المعماري</title>
+
+    <!-- 1. CDNs for Both Applications -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    
+    <!-- 2. Combined and Updated Styles -->
+    <style>
+        /* --- Base Variables & Global Styles --- */
+        :root {
+            --primary: #8B5CF6; --secondary: #EC4899; --dark: #0f172a; --darker: #0a1120;
+            --light: #e2e8f0; --gray: #94a3b8; --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(148, 163, 184, 0.2); --error: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--darker); color: var(--light); }
+
+        /* --- Tab Switcher Styles --- */
+        .app-toggle-btn { padding: 0.75rem 1.5rem; border-radius: 9999px; font-weight: 600; cursor: pointer; border: 2px solid var(--card-border); background-color: transparent; color: var(--gray); transition: all 0.3s ease; }
+        .app-toggle-btn:hover { background-color: var(--primary); color: white; border-color: var(--primary); }
+        .app-toggle-btn.active-tab { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-color: transparent; box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4); }
+
+        /* --- Styles for 3D Model Viewer App (Reverted to Original) --- */
+        #model-viewer-container {
+            background-image: radial-gradient(at 80% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%), radial-gradient(at 20% 80%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            color: var(--light);
+            line-height: 1.6;
+        }
+        #model-viewer-wrapper { min-height: 100vh; display: flex; flex-direction: column; padding: 1rem; }
+        #model-viewer-container header { width: 100%; max-width: 1200px; text-align: center; margin: 2rem auto; padding: 0 1rem; }
+        #model-viewer-container .logo { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; }
+        #model-viewer-container .logo-icon { background: linear-gradient(135deg, var(--primary), var(--secondary)); width: 60px; height: 60px; border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); }
+        #model-viewer-container .logo-icon i { font-size: 2rem; color: white; }
+        #model-viewer-container h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+        #model-viewer-container .subtitle { font-size: 1.1rem; color: var(--gray); max-width: 600px; margin: 0 auto; }
+        #model-viewer-container main { width: 100%; max-width: 1200px; margin: 0 auto; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2rem; padding: 1rem; }
+        #model-viewer-container .upload-section { width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+        #model-viewer-container .upload-card { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: 20px; padding: 2.5rem; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; }
+        #model-viewer-container .upload-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); }
+        #model-viewer-container .upload-icon { width: 100px; height: 100px; border-radius: 50%; background: rgba(139, 92, 246, 0.1); display: flex; align-items: center; justify-content: center; border: 2px dashed var(--primary); }
+        #model-viewer-container .upload-icon i { font-size: 3rem; color: var(--primary); }
+        #model-viewer-container .upload-text { text-align: center; }
+        #model-viewer-container .upload-text h2 { font-size: 1.8rem; margin-bottom: 0.5rem; color: var(--light); }
+        #model-viewer-container .upload-text p { color: var(--gray); margin-bottom: 1.5rem; }
+        #model-viewer-container .file-types { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.5rem; }
+        #model-viewer-container .file-type { background: rgba(30, 41, 59, 0.5); padding: 0.4rem 0.8rem; border-radius: 50px; font-size: 0.9rem; color: var(--gray); }
+        #model-viewer-container .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1rem 2rem; border-radius: 50px; font-weight: 600; font-size: 1.1rem; cursor: pointer; border: none; transition: all 0.3s ease; text-decoration: none; }
+        #model-viewer-container .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4); }
+        #model-viewer-container .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.6); }
+        #model-viewer-container .model-viewer-section { width: 100%; }
+        #model-viewer-container .model-container { width: 100%; height: 500px; background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); position: relative; }
+        #model-viewer-container model-viewer { width: 100%; height: 100%; --progress-bar-color: var(--secondary); --progress-bar-height: 5px; --poster-color: transparent; }
+        #model-viewer-container .model-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); border-radius: 50px; padding: 8px; display: flex; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid var(--card-border); }
+        #model-viewer-container .control-btn { background: transparent; border: none; color: var(--light); width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s ease, color 0.2s ease; }
+        #model-viewer-container .control-btn:hover { background-color: var(--primary); color: white; }
+        #model-viewer-container .control-btn.active { background-color: rgba(139, 92, 246, 0.3); color: var(--primary); }
+        #model-viewer-container model-viewer button[slot="ar-button"] { position: absolute; top: 16px; right: 16px; border-radius: 50px; background: var(--dark); color: var(--light); border: 1px solid var(--card-border); padding: 0.8rem 1.5rem; font-weight: 600; font-size: 1rem; }
+        #model-viewer-container model-viewer button[slot="ar-button"]:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        #model-viewer-container .instructions { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: 20px; padding: 2rem; width: 100%; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+        #model-viewer-container .instructions h3 { font-size: 1.5rem; color: var(--primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem; }
+        #model-viewer-container .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        #model-viewer-container .step { display: flex; align-items: flex-start; gap: 1rem; }
+        #model-viewer-container .step-number { background: linear-gradient(135deg, var(--primary), var(--secondary)); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: bold; color: white; }
+        #model-viewer-container .step-content h4 { font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--light); }
+        #model-viewer-container .step-content p { color: var(--gray); font-size: 0.95rem; }
+        #model-viewer-container .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; width: 100%; }
+        #model-viewer-container .feature-card { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border); border-radius: 20px; padding: 2rem; display: flex; flex-direction: column; gap: 1rem; transition: all 0.3s ease; }
+        #model-viewer-container .feature-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4); border-color: rgba(139, 92, 246, 0.4); }
+        #model-viewer-container .feature-icon { background: rgba(139, 92, 246, 0.1); width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+        #model-viewer-container .feature-icon i { font-size: 1.8rem; color: var(--primary); }
+        #model-viewer-container .feature-card h3 { font-size: 1.3rem; color: var(--light); }
+        #model-viewer-container .feature-card p { color: var(--gray); line-height: 1.7; }
+        #model-viewer-container footer { width: 100%; max-width: 1200px; margin: 3rem auto 1rem; text-align: center; padding: 2rem 1rem; color: var(--gray); font-size: 0.9rem; border-top: 1px solid var(--card-border); }
+        #model-viewer-container .drop-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+        #model-viewer-container .drop-overlay.active { display: flex; opacity: 1; }
+        #model-viewer-container .drop-content { text-align: center; padding: 3rem; background: var(--card-bg); border: 2px dashed var(--primary); border-radius: 20px; max-width: 500px; }
+        #model-viewer-container .drop-icon { font-size: 5rem; color: var(--primary); margin-bottom: 1.5rem; }
+        #model-viewer-container .drop-text { font-size: 2rem; font-weight: bold; margin-bottom: 1rem; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        #model-viewer-container .error-message { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--error); border-radius: 12px; padding: 1.2rem; display: none; align-items: center; gap: 1rem; width: 100%; max-width: 600px; margin-top: 1rem; }
+        #model-viewer-container .error-message.show { display: flex; animation: pulse 2s infinite; }
+        #model-viewer-container .error-icon { color: var(--error); font-size: 1.5rem; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        /* --- Styles for BoQ Generator App --- */
+        #boq-app-container { font-family: sans-serif; }
+        #root:empty::before { content: "جاري تحميل الأداة..."; display: block; text-align: center; font-size: 1.5rem; color: #555; padding-top: 5rem; font-family: sans-serif; }
+        @media print { body * { visibility: hidden; } #boq-app-container, #boq-app-container * { visibility: visible; } #boq-app-container { position: absolute; left: 0; top: 0; width: 100%; } .no-print { display: none !important; } .printable-area { padding: 2cm; } .printable-area .bg-white { box-shadow: none !important; border: 1px solid #ccc; } .printable-area h1, .printable-area h2, .printable-area h3 { color: black !important; } .printable-area .text-gray-500 { color: #555 !important; } }
+    </style>
+</head>
+<body>
+
+    <header class="bg-slate-900/70 backdrop-blur-sm p-4 text-center sticky top-0 z-50 shadow-lg no-print">
+        <h1 class="text-2xl font-bold text-white mb-4 hidden sm:block">لوحة تحكم المهندس المعماري</h1>
+        <div class="flex justify-center gap-2 sm:gap-4">
+            <button id="show-boq-btn" class="app-toggle-btn active-tab"><i class="fas fa-calculator ml-2"></i> كشف الكميات والتكاليف</button>
+            <button id="show-viewer-btn" class="app-toggle-btn"><i class="fas fa-cube ml-2"></i> عارض النماذج ثلاثية الأبعاد</button>
+        </div>
+    </header>
+
+    <div id="boq-app-container">
+        <div id="root"></div>
+    </div>
+
+    <div id="model-viewer-container" style="display: none;">
+      <div id="model-viewer-wrapper">
+        <!-- Header -->
+        <header>
+          <div class="logo">
+            <div class="logo-icon"><i class="fas fa-cube"></i></div>
+            <div>
+              <h1>عارض النماذج ثلاثية الأبعاد</h1>
+              <p class="subtitle">استكشف النماذج ثلاثية الأبعاد في المتصفح والواقع المعزز. حمّل ملف GLB أو تفاعل مع النموذج التجريبي أدناه.</p>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+          <!-- Upload Section -->
+          <section class="upload-section">
+            <div class="upload-card">
+              <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+              <div class="upload-text">
+                <h2>تحميل نموذج جديد</h2>
+                <p>اسحب وأسقط ملف GLB هنا أو انقر للبحث في جهازك.</p>
+                <div class="file-types">
+                  <span class="file-type">.GLB</span>
+                  <span class="file-type">.GLTF</span>
+                </div>
+              </div>
+              <button id="uploadBtn" class="btn btn-primary">
+                <i class="fas fa-upload"></i> اختيار ملف
+              </button>
+              <input type="file" id="fileInput" accept=".glb,.gltf,model/gltf-binary" hidden>
+            </div>
+            <div id="errorMessage" class="error-message">
+              <i class="fas fa-exclamation-circle error-icon"></i>
+              <div>
+                <h3>خطأ في الملف</h3>
+                <p>الرجاء التأكد من أن الملف بصيغة GLB أو GLTF صالحة.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Model Viewer Section -->
+          <section class="model-viewer-section">
+            <div id="modelContainer" class="model-container">
+              <!-- Model will be loaded here by JavaScript -->
+            </div>
+            <!-- Reverted Controls -->
+            <div id="modelControls" style="display: none;" class="model-controls">
+               <button id="resetViewBtn" class="control-btn" title="إعادة ضبط العرض"><i class="fa-solid fa-camera-rotate"></i></button>
+               <button id="toggleRotationBtn" class="control-btn" title="تشغيل/إيقاف الدوران"><i class="fa-solid fa-arrows-rotate"></i></button>
+            </div>
+          </section>
+
+          <!-- Instructions & Features -->
+          <section class="instructions">
+            <h3><i class="fas fa-info-circle"></i> كيف يعمل؟</h3>
+            <div class="steps">
+              <div class="step"><div class="step-number">1</div><div class="step-content"><h4>تحميل النموذج</h4><p>انقر على زر "اختيار ملف" واختر ملف GLB/GLTF.</p></div></div>
+              <div class="step"><div class="step-number">2</div><div class="step-content"><h4>التفاعل</h4><p>استخدم الفأرة للتدوير والتكبير. استخدم الأزرار للتحكم الإضافي.</p></div></div>
+              <div class="step"><div class="step-number">3</div><div class="step-content"><h4>الواقع المعزز (AR)</h4><p>على جهاز متوافق، انقر على أيقونة الواقع المعزز لعرض النموذج في بيئتك.</p></div></div>
+            </div>
+          </section>
+          <section class="features">
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-vr-cardboard"></i></div><h3>تجربة واقع معزز</h3><p>عرض النماذج ثلاثية الأبعاد في بيئتك الحقيقية باستخدام تقنية الواقع المعزز.</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-mobile-alt"></i></div><h3>متوافق مع الأجهزة</h3><p>يعمل التطبيق بسلاسة على الهواتف الذكية، الأجهزة اللوحية، وأجهزة الكمبيوتر.</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-bolt"></i></div><h3>أداء فائق</h3><p>تحميل وعرض سريع للنماذج ثلاثية الأبعاد بفضل تقنيات الويب الحديثة.</p></div>
+          </section>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+          <p>&copy; 2024 عارض النماذج ثلاثية الأبعاد | تم التطوير باستخدام &lt;model-viewer&gt;</p>
+          <p>جميع الحقوق محفوظة.</p>
+        </footer>
+
+        <!-- Drag & Drop Overlay -->
+        <div id="dropOverlay" class="drop-overlay">
+          <div class="drop-content">
+            <div class="drop-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+            <div class="drop-text">أسقط الملف هنا</div>
+            <p>اترك الملف لتحميله وعرضه فوراً.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const boqContainer = document.getElementById('boq-app-container');
+            const viewerContainer = document.getElementById('model-viewer-container');
+            const boqBtn = document.getElementById('show-boq-btn');
+            const viewerBtn = document.getElementById('show-viewer-btn');
+
+            boqBtn.addEventListener('click', () => {
+                boqContainer.style.display = 'block'; viewerContainer.style.display = 'none';
+                document.body.style.background = '#f0f9ff';
+                boqBtn.classList.add('active-tab'); viewerBtn.classList.remove('active-tab');
+            });
+
+            viewerBtn.addEventListener('click', () => {
+                boqContainer.style.display = 'none'; viewerContainer.style.display = 'block';
+                document.body.style.background = 'var(--darker)';
+                viewerBtn.classList.add('active-tab'); boqBtn.classList.remove('active-tab');
+            });
+            document.body.style.background = '#f0f9ff';
+        });
+    </script>
+    
+    <script type="text/babel" data-presets="react">
+      // React code for BoQ Generator remains unchanged and is omitted for brevity.
+      // It is identical to the previous version. Please re-insert the full React script here.
+        const { useState, useEffect, useMemo, useCallback } = React;
+        const BoqSection = { EARTHWORKS: "أعمال الحفريات والردم", CONCRETE: "أعمال الخرسانة المسلحة", MASONRY: "أعمال المبانى", FINISHES: "أعمال التشطيبات", PLUMBING: "أعمال السباكة", ELECTRICAL: "أعمال الكهرباء", HVAC: "أعمال التكييف والتهوية", OTHER: "أعمال أخرى" };
+        const BoqSectionArray = Object.values(BoqSection);
+        const StandardUnits = ['م3', 'م2', 'م', 'طن', 'كجم', 'وحدة', 'لفة', 'طقم', 'عدد'];
+        const formatCurrency = (amount) => new Intl.NumberFormat('ar-DZ', { style: 'currency', currency: 'DZD' }).format(amount);
+        function useLocalStorageState(key, defaultValue) {
+            const [state, setState] = useState(() => { try { const savedItem = localStorage.getItem(key); return savedItem ? JSON.parse(savedItem) : defaultValue; } catch (error) { console.error("Error reading from localStorage", error); return defaultValue; } });
+            useEffect(() => { try { localStorage.setItem(key, JSON.stringify(state)); } catch (error) { console.error("Error writing to localStorage", error); } }, [key, state]);
+            return [state, setState];
+        }
+        const CostAnalysisChart = React.memo(({ items }) => {
+            const analysisData = useMemo(() => {
+                const sectionTotals = items.reduce((acc, item) => { acc[item.section] = (acc[item.section] || 0) + item.totalAmount; return acc; }, {});
+                const grandTotal = Object.values(sectionTotals).reduce((sum, total) => sum + total, 0);
+                if (grandTotal === 0) return [];
+                return Object.entries(sectionTotals).map(([section, total]) => ({ section, total, percentage: (total / grandTotal) * 100 })).sort((a, b) => b.total - a.total);
+            }, [items]);
+            if (!analysisData.length) return null;
+            return ( <div className="bg-white p-6 rounded-lg shadow-md mb-6 printable-area"> <h2 className="text-2xl font-semibold text-sky-700 mb-4 border-b pb-2">تحليل التكاليف</h2> <div className="space-y-3"> {analysisData.map(({ section, total, percentage }) => ( <div key={section}> <div className="flex justify-between items-center mb-1 text-sm"> <span className="font-medium text-gray-700">{section}</span> <span className="text-gray-600">{formatCurrency(total)} ({percentage.toFixed(1)}%)</span> </div> <div className="w-full bg-gray-200 rounded-full h-4"> <div className="bg-sky-600 h-4 rounded-full" style={{ width: `${percentage}%` }}></div> </div> </div> ))} </div> </div> );
+        });
+        const SummaryTotals = React.memo(({ subTotal }) => {
+            const [overhead, setOverhead] = useLocalStorageState('overhead', 15);
+            const [profit, setProfit] = useLocalStorageState('profit', 10);
+            const [tax, setTax] = useLocalStorageState('tax', 19);
+            const calculations = useMemo(() => { const overheadAmount = subTotal * (overhead / 100); const profitAmount = subTotal * (profit / 100); const totalBeforeTax = subTotal + overheadAmount + profitAmount; const taxAmount = totalBeforeTax * (tax / 100); const grandTotal = totalBeforeTax + taxAmount; return { overheadAmount, profitAmount, totalBeforeTax, taxAmount, grandTotal }; }, [subTotal, overhead, profit, tax]);
+            return ( <div className="bg-white p-6 rounded-lg shadow-md printable-area"> <h2 className="text-2xl font-semibold text-sky-700 mb-4 border-b pb-2">ملخص التكلفة الإجمالية</h2> <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4"> <div className="space-y-4 no-print"> <div><label className="block text-sm font-medium text-gray-700">التكاليف الإدارية (%)</label><input type="number" value={overhead} onChange={e => setOverhead(parseFloat(e.target.value) || 0)} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" /></div> <div><label className="block text-sm font-medium text-gray-700">هامش الربح (%)</label><input type="number" value={profit} onChange={e => setProfit(parseFloat(e.target.value) || 0)} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" /></div> <div><label className="block text-sm font-medium text-gray-700">ضريبة القيمة المضافة (%)</label><input type="number" value={tax} onChange={e => setTax(parseFloat(e.target.value) || 0)} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" /></div> </div> <div className="space-y-2 border-r-2 pr-4 border-gray-100"> <div className="flex justify-between py-2"><span className="text-gray-600">إجمالي التكلفة المباشرة:</span><span className="font-semibold text-gray-800">{formatCurrency(subTotal)}</span></div> <div className="flex justify-between py-2"><span className="text-gray-600">التكاليف الإدارية ({overhead}%):</span><span className="font-semibold text-gray-800">{formatCurrency(calculations.overheadAmount)}</span></div> <div className="flex justify-between py-2"><span className="text-gray-600">هامش الربح ({profit}%):</span><span className="font-semibold text-gray-800">{formatCurrency(calculations.profitAmount)}</span></div> <div className="flex justify-between py-2 border-t font-bold"><span className="text-gray-700">الإجمالي قبل الضريبة:</span><span className="text-gray-900">{formatCurrency(calculations.totalBeforeTax)}</span></div> <div className="flex justify-between py-2"><span className="text-gray-600">ضريبة القيمة المضافة ({tax}%):</span><span className="font-semibold text-gray-800">{formatCurrency(calculations.taxAmount)}</span></div> <div className="flex justify-between py-3 bg-sky-100 rounded-md px-3 mt-2"><span className="text-xl font-bold text-sky-800">التكلفة الإجمالية النهائية:</span><span className="text-xl font-bold text-sky-800">{formatCurrency(calculations.grandTotal)}</span></div> </div> </div> </div> )
+        });
+        const BoqItemForm = React.memo(({ onAddItem, editingItem, onUpdateItem, clearEditing }) => {
+            const initialFormState = { section: BoqSection.EARTHWORKS, itemCode: '', description: '', unit: 'م3', quantity: 0, unitRate: 0 };
+            const [item, setItem] = useState(initialFormState);
+            useEffect(() => { setItem(editingItem || initialFormState); }, [editingItem]);
+            const handleChange = (e) => { const { name, value } = e.target; setItem(prev => ({ ...prev, [name]: name === 'quantity' || name === 'unitRate' ? parseFloat(value) || 0 : value })); };
+            const handleSubmit = (e) => { e.preventDefault(); if (!item.description.trim()) { alert("يرجى إدخال وصف البند."); return; } const fullItem = { ...item, id: editingItem ? editingItem.id : crypto.randomUUID(), totalAmount: item.quantity * item.unitRate }; if (editingItem) { onUpdateItem(fullItem); } else { onAddItem(fullItem); } setItem(initialFormState); };
+            return ( <div className="bg-white p-6 rounded-lg shadow-md mb-6 no-print"> <h2 className="text-2xl font-semibold text-sky-700 mb-4 border-b pb-2">{editingItem ? 'تعديل بند' : 'إضافة بند جديد'}</h2> <form onSubmit={handleSubmit} className="space-y-4"> <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> <div><label className="block text-sm font-medium text-gray-700">قسم الأعمال</label><select name="section" value={item.section} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">{BoqSectionArray.map(s => <option key={s} value={s}>{s}</option>)}</select></div> <div><label className="block text-sm font-medium text-gray-700">كود البند (اختياري)</label><input type="text" name="itemCode" value={item.itemCode} onChange={handleChange} placeholder="e.g., 03 30 00" className="mt-1 block w-full p-2 border border-gray-300 rounded-md" /></div> </div> <div><label className="block text-sm font-medium text-gray-700">وصف البند التفصيلي</label><textarea name="description" rows="3" value={item.description} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md resize-y" /></div> <div className="grid grid-cols-2 md:grid-cols-4 gap-4"> <div><label className="block text-sm font-medium text-gray-700">الوحدة</label><select name="unit" value={item.unit} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">{StandardUnits.map(u => <option key={u} value={u}>{u}</option>)}</select></div> <div><label className="block text-sm font-medium text-gray-700">الكمية</label><input type="number" name="quantity" value={item.quantity} onChange={handleChange} min="0" step="any" className="mt-1 block w-full p-2 border border-gray-300 rounded-md" /></div> <div><label className="block text-sm font-medium text-gray-700">سعر الوحدة</label><input type="number" name="unitRate" value={item.unitRate} onChange={handleChange} min="0" step="any" className="mt-1 block w-full p-2 border border-gray-300 rounded-md" /></div> </div> <div className="flex items-center justify-end space-x-3 space-x-reverse"> {editingItem && (<button type="button" onClick={clearEditing} className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">إلغاء</button>)} <button type="submit" className="px-4 py-2 border-transparent rounded-md text-white bg-sky-600 hover:bg-sky-700">{editingItem ? 'تحديث البند' : 'إضافة البند'}</button> </div> </form> </div> );
+        });
+        const BoqTable = React.memo(({ items, onEditItem, onDeleteItem }) => {
+            const groupedItems = useMemo(() => items.reduce((acc, item) => { (acc[item.section] = acc[item.section] || []).push(item); return acc; }, {}), [items]);
+            const sectionsWithItems = BoqSectionArray.filter(section => groupedItems[section]);
+            if (items.length === 0) return <div className="bg-white p-6 rounded-lg shadow-md text-center text-gray-500">لم تتم إضافة أي بنود بعد.</div>;
+            return ( <div className="bg-white p-6 rounded-lg shadow-md printable-area"> <h2 className="text-2xl font-semibold text-sky-700 mb-4 border-b pb-2">جدول الكميات والتكاليف</h2> {sectionsWithItems.map(section => { const sectionItems = groupedItems[section]; const sectionTotal = sectionItems.reduce((sum, item) => sum + item.totalAmount, 0); return ( <div key={section} className="mb-8"> <h3 className="text-xl font-semibold text-sky-600 bg-sky-50 p-3 rounded-t-md flex justify-between"><span>{section}</span> <span>{formatCurrency(sectionTotal)}</span></h3> <div className="overflow-x-auto"> <table className="min-w-full divide-y divide-gray-200"> <thead className="bg-gray-50"><tr><th className="p-3 text-right text-xs font-medium text-gray-500">كود</th><th className="p-3 text-right text-xs font-medium text-gray-500 w-2/5">وصف البند</th><th className="p-3 text-right text-xs font-medium text-gray-500">الوحدة</th><th className="p-3 text-right text-xs font-medium text-gray-500">الكمية</th><th className="p-3 text-right text-xs font-medium text-gray-500">سعر الوحدة</th><th className="p-3 text-right text-xs font-medium text-gray-500">الإجمالي</th><th className="p-3 text-center text-xs font-medium text-gray-500 no-print">إجراءات</th></tr></thead> <tbody className="bg-white divide-y divide-gray-200"> {sectionItems.map((item) => ( <tr key={item.id} className="hover:bg-gray-50"><td className="p-3 text-sm">{item.itemCode}</td><td className="p-3 text-sm">{item.description}</td><td className="p-3 text-sm">{item.unit}</td><td className="p-3 text-sm">{item.quantity.toLocaleString('ar-DZ')}</td><td className="p-3 text-sm">{formatCurrency(item.unitRate)}</td><td className="p-3 text-sm font-semibold">{formatCurrency(item.totalAmount)}</td> <td className="p-3 text-sm text-center no-print"><button onClick={() => onEditItem(item)} className="text-sky-600 hover:text-sky-900 ml-3"><i className="fas fa-edit"></i></button><button onClick={() => onDeleteItem(item.id)} className="text-red-600 hover:text-red-900"><i className="fas fa-trash"></i></button></td></tr> ))} </tbody> </table> </div> </div> ); })} </div> );
+        });
+        const ProjectInfoForm = React.memo(({ projectInfo, onProjectInfoChange }) => {
+            const handleChange = (e) => onProjectInfoChange({ ...projectInfo, [e.target.name]: e.target.value });
+            return ( <div className="bg-white p-6 rounded-lg shadow-md mb-6 printable-area"> <h1 className="text-3xl font-bold text-sky-800 mb-2">{projectInfo.projectName || "اسم المشروع"}</h1> <div className="grid grid-cols-2 gap-4 text-gray-600"> <p><strong>العميل:</strong> {projectInfo.clientName || "غير محدد"}</p> <p><strong>الموقع:</strong> {projectInfo.location || "غير محدد"}</p> <p><strong>التاريخ:</strong> {projectInfo.date || "غير محدد"}</p> </div> <details className="mt-4 no-print"><summary className="cursor-pointer text-sm text-sky-600">تعديل بيانات المشروع</summary> <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t"> <input type="text" name="projectName" placeholder="اسم المشروع" value={projectInfo.projectName} onChange={handleChange} className="p-2 border rounded" /> <input type="text" name="clientName" placeholder="اسم العميل" value={projectInfo.clientName} onChange={handleChange} className="p-2 border rounded" /> <input type="text" name="location" placeholder="الموقع" value={projectInfo.location} onChange={handleChange} className="p-2 border rounded" /> <input type="date" name="date" value={projectInfo.date} onChange={handleChange} className="p-2 border rounded" /> </div> </details> </div> );
+        });
+        function App() {
+            const [projectInfo, setProjectInfo] = useLocalStorageState('projectInfo', { projectName: '', clientName: '', location: 'الجزائر', date: new Date().toISOString().split('T')[0] });
+            const [boqItems, setBoqItems] = useLocalStorageState('boqItems', []);
+            const [editingItem, setEditingItem] = useState(null);
+            const addBoqItem = useCallback((item) => setBoqItems(p => [...p, item]), []);
+            const updateBoqItem = useCallback((upd) => { setBoqItems(p => p.map(i => (i.id === upd.id ? upd : i))); setEditingItem(null); }, []);
+            const deleteBoqItem = useCallback((id) => { if (window.confirm('هل أنت متأكد؟')) setBoqItems(p => p.filter(i => i.id !== id)); }, []);
+            const subTotal = useMemo(() => boqItems.reduce((sum, item) => sum + item.totalAmount, 0), [boqItems]);
+            return ( <div className="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-purple-50 py-8 px-4 sm:px-6 lg:px-8"> <main className="max-w-6xl mx-auto space-y-8"> <div className="flex justify-between items-center no-print"> <h1 className="text-4xl font-extrabold text-sky-700">كشف الكميات والتكاليف</h1> <button onClick={() => window.print()} className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 flex items-center gap-2"> <i className="fas fa-print"></i> طباعة / تصدير PDF </button> </div> <ProjectInfoForm projectInfo={projectInfo} onProjectInfoChange={setProjectInfo} /> <BoqItemForm onAddItem={addBoqItem} editingItem={editingItem} onUpdateItem={updateBoqItem} clearEditing={() => setEditingItem(null)} /> <BoqTable items={boqItems} onDeleteItem={deleteBoqItem} onEditItem={setEditingItem} /> <CostAnalysisChart items={boqItems} /> <SummaryTotals subTotal={subTotal} /> </main> </div> );
+        }
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+    
+    <script>
+    // Script for 3D Model Viewer (Reverted to Original)
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Element Selection (scoped to the viewer container) ---
+        const viewerContainer = document.getElementById('model-viewer-container');
+        const uploadBtn = viewerContainer.querySelector('#uploadBtn');
+        const fileInput = viewerContainer.querySelector('#fileInput');
+        const dropOverlay = viewerContainer.querySelector('#dropOverlay');
+        const errorMessage = viewerContainer.querySelector('#errorMessage');
+        const modelContainer = viewerContainer.querySelector('#modelContainer');
+        const modelControls = viewerContainer.querySelector('#modelControls');
+        const resetViewBtn = viewerContainer.querySelector('#resetViewBtn');
+        const toggleRotationBtn = viewerContainer.querySelector('#toggleRotationBtn');
+
+        let currentModelViewer = null;
+        let isRotating = true; // Default state
+
+        // --- Core Function to Load a Model ---
+        function loadModel(src, altText) {
+            // Clear previous model and hide controls
+            modelContainer.innerHTML = '';
+            modelControls.style.display = 'none';
+            errorMessage.classList.remove('show');
+
+            // Create the model-viewer element
+            const modelViewer = document.createElement('model-viewer');
+            modelViewer.src = src;
+            modelViewer.alt = altText;
+            modelViewer.setAttribute('ar', '');
+            modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+            modelViewer.setAttribute('camera-controls', '');
+            modelViewer.setAttribute('environment-image', 'neutral');
+            modelViewer.setAttribute('shadow-intensity', '1');
+            modelViewer.setAttribute('camera-orbit', '0deg 75deg 1.5m');
+
+            if (isRotating) {
+                modelViewer.setAttribute('auto-rotate', '');
+            }
+
+            const arButton = document.createElement('button');
+            arButton.slot = 'ar-button';
+            arButton.innerHTML = '<i class="fas fa-vr-cardboard" style="margin-left: 8px;"></i> عرض بالواقع المعزز';
+            modelViewer.appendChild(arButton);
+
+            modelContainer.appendChild(modelViewer);
+            currentModelViewer = modelViewer;
+
+            modelViewer.addEventListener('load', () => {
+                modelControls.style.display = 'flex';
+                updateRotationButton();
+            });
+        }
+
+        // --- Event Handlers ---
+        function handleFileSelect(file) {
+            if (file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf') || file.type === 'model/gltf-binary')) {
+                const fileUrl = URL.createObjectURL(file);
+                loadModel(fileUrl, `نموذج ${file.name}`);
+            } else {
+                errorMessage.classList.add('show');
+                modelControls.style.display = 'none';
+            }
+        }
+      
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+
+        // --- Model Control Handlers ---
+        resetViewBtn.addEventListener('click', () => {
+            if (currentModelViewer) {
+                currentModelViewer.cameraOrbit = '0deg 75deg 1.5m';
+                currentModelViewer.fieldOfView = 'auto';
+            }
+        });
+      
+        toggleRotationBtn.addEventListener('click', () => {
+            if (currentModelViewer) {
+                isRotating = !isRotating;
+                if (isRotating) {
+                    currentModelViewer.setAttribute('auto-rotate', '');
+                } else {
+                    currentModelViewer.removeAttribute('auto-rotate');
+                }
+                updateRotationButton();
+            }
+        });
+
+        function updateRotationButton() {
+            toggleRotationBtn.classList.toggle('active', isRotating);
+            toggleRotationBtn.title = isRotating ? 'إيقاف الدوران' : 'تشغيل الدوران';
+        }
+
+        // --- Drag and Drop Logic ---
+        document.addEventListener('dragenter', (e) => {
+            if (viewerContainer.style.display === 'none') return;
+            e.preventDefault();
+            e.stopPropagation();
+            dropOverlay.classList.add('active');
+        });
+
+        document.addEventListener('dragleave', (e) => {
+            if (viewerContainer.style.display === 'none') return;
+            e.preventDefault();
+            e.stopPropagation();
+            setTimeout(() => {
+                if (!dropOverlay.matches(':hover')) {
+                    dropOverlay.classList.remove('active');
+                }
+            }, 100);
+        });
+
+        document.addEventListener('dragover', (e) => {
+            if (viewerContainer.style.display === 'none') return;
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        document.addEventListener('drop', (e) => {
+            if (viewerContainer.style.display === 'none') return;
+            e.preventDefault();
+            e.stopPropagation();
+            dropOverlay.classList.remove('active');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleFileSelect(e.dataTransfer.files[0]);
+                e.dataTransfer.clearData();
+            }
+        });
+
+        // --- Initial Demo Model Load ---
+        const demoModelUrl = 'https://modelviewer.dev/shared-assets/models/Astronaut.glb';
+        loadModel(demoModelUrl, 'نموذج رائد فضاء تجريبي');
+    });
+    </script>
+</body>
+</html>
